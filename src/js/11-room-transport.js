@@ -65,7 +65,16 @@
         }
         channels.add(channel);
         let match;
-        const deadline = setTimeout(() => channel.close(), 10000);
+        const deadline = setTimeout(disconnect, 10000);
+        function release() {
+          clearTimeout(deadline);
+          channels.delete(channel);
+          match?.close();
+        }
+        function disconnect() {
+          release();
+          channel.close();
+        }
         channel.on('open', () => {
           clearTimeout(deadline);
           match = arena.attach({
@@ -74,24 +83,20 @@
                 channel.send(JSON.stringify(message));
               }
             },
-            close: () => setTimeout(() => channel.close(), 350),
+            close: () => setTimeout(disconnect, 350),
           });
         });
         channel.on('data', (data) => {
           if (typeof data !== 'string' || data.length > 512) {
-            channel.close();
+            disconnect();
             return;
           }
           let message;
           try { message = JSON.parse(data); } catch { return; }
           match?.receive(message);
         });
-        channel.on('close', () => {
-          clearTimeout(deadline);
-          channels.delete(channel);
-          match?.close();
-        });
-        channel.on('error', () => channel.close());
+        channel.on('close', release);
+        channel.on('error', disconnect);
       });
       peer.on('disconnected', () => {
         if (transport.readyState === 1 && !peer.destroyed) {
@@ -102,7 +107,7 @@
       });
     } else {
       peer.on('open', () => {
-        remote = peer.connect(peerId(room), { serialization: 'none', reliable: true });
+        remote = peer.connect(peerId(room), { serialization: 'raw', reliable: true });
         remote.on('open', open);
         remote.on('data', receive);
         remote.on('close', () => transport.close('The arena host disconnected.'));
