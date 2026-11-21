@@ -1,0 +1,38 @@
+.x-nade { position: absolute; right: var(--gr); bottom: calc(158px + var(--sab)); display: flex; align-items: center; gap: 8px; font: 600 12px/1 var(--f-label); letter-spacing: .24em; margin-right: -.24em; text-transform: uppercase; color: rgba(232, 228, 218, .86); text-shadow: var(--shadow); transition: opacity .2s; }
+.x-nade.cool { opacity: .38; }
+.x-nade svg { width: 14px; height: 16px; }
+.is-touch .x-nade { display: none; }
+
+.sl-scope {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  pointer-events: none;
+}
+.sl-scope[hidden] { display: none; }
+.sl-scope-lens {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(73vh, 82vw);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 3px solid #313936;
+  border-radius: 50%;
+  box-shadow: 0 0 0 100vmax #080b0d, inset 0 0 34px 14px #060d12dd;
+  background: radial-gradient(circle, transparent 57%, #15232a66 85%);
+}
+.sl-scope-mark {
+  position: absolute;
+  inset: 0;
+  color: #c5d8cc;
+  background:
+    radial-gradient(circle at center, #ffc184 0 1.25px, transparent 1.75px),
+    linear-gradient(currentColor, currentColor) center / 1px 69% no-repeat,
+    linear-gradient(currentColor, currentColor) center / 69% 1px no-repeat,
+    repeating-linear-gradient(transparent 0 8%, currentColor 8% 8.55%, transparent 8.55% 13%) center bottom 20% / 6% 38% no-repeat;
+  filter: drop-shadow(1px 1px 1px #111);
+}
+.sl-scoped .h-cross { visibility: hidden; }

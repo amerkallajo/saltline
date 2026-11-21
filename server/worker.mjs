@@ -8,7 +8,7 @@ export default {
   fetch(request, env) {
     const url = new URL(request.url);
     if (request.method === 'GET' && url.pathname === '/health') {
-      return Response.json({ service: 'saltline-rooms', version: 1 });
+      return Response.json({ service: 'saltline-rooms', version: 2 });
     }
     const match = url.pathname.match(roomPath);
     if (!match || request.method !== 'GET' || request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') {

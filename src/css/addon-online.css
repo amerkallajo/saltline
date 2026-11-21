@@ -77,7 +77,6 @@
 body.sl-online-live .h-obj,
 body.sl-online-live .x-nade,
 body.sl-online-live .t-nade,
-body.sl-online-live .t-laser,
 body.sl-online-live [data-act="restart"] { display: none !important; }
 @media (max-height: 460px), (max-width: 540px) {
   .sl-online-hud { font-size: 10px; top: 52px; }

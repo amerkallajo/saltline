@@ -182,7 +182,7 @@ body { background: var(--ink); color: var(--bone); overflow: hidden; font-family
 .t-interact.on { display: block; }
 .t-nade { width: 52px; height: 52px; right: calc(176px + var(--sar)); bottom: calc(178px + var(--sab)); font-size: 10px; border-color: #ff8a5c; color: #ffb08f; }
 .t-crouch { width: 52px; height: 52px; right: calc(206px + var(--sar)); bottom: calc(22px + var(--sab)); font-size: 10px; }
-.t-laser { width: 42px; height: 42px; border-radius: 0; right: calc(64px + var(--sar)); top: calc(12px + var(--sat)); font-size: 10px; border-color: #5cf0ff; color: #7ff3ff; }
+.t-sniper { width: 42px; height: 42px; border-radius: 0; right: calc(64px + var(--sar)); top: calc(12px + var(--sat)); font-size: 10px; border-color: #d5ac75; color: #fbd5a2; }
 .t-strike { width: 64px; height: 64px; left: 50%; margin-left: -32px; top: calc(70px + var(--sat)); border-color: #ff5a40; color: #ff8a70; display: none; font-size: 10px; }
 .t-strike.ready { display: block; }
 .t-knife { width: 50px; height: 50px; right: calc(262px + var(--sar)); bottom: calc(40px + var(--sab)); font-size: 9px; }

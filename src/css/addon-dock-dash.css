@@ -32,7 +32,7 @@
 }
 .dash-active .h-relays { display: none; }
 .dash-running :is(.h-ammo, .h-cross, .h-health, .x-nade),
-.dash-running .touch :is(.t-fire, .t-ads, .t-reload, .t-swap, .t-nade, .t-laser, .t-knife) {
+.dash-running .touch :is(.t-fire, .t-ads, .t-reload, .t-swap, .t-nade, .t-sniper, .t-knife) {
   display: none;
 }
 .dash-running .touch .t-jump { bottom: calc(85px + var(--sab)); }

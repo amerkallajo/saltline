@@ -1,15 +1,15 @@
-// Match rules shared by the Node server and browser-hosted rooms.
-(function () {
+// Match rules shared by the hosted worker, Node server and browser-hosted rooms.
+(function (weapons, posture) {
   'use strict';
+
+  const protocol = 2;
+  const weaponIds = Object.keys(weapons);
+  const heights = { stand: 1.8, crouch: 1.22, slide: .92 };
 
   function createArena(terminal) {
     const capacity = 12;
     const respawnDelay = 2500;
     const spawnProtection = 1400;
-    const weapons = new Map([
-      ['rifle', { damage: 26, range: 300, interval: 78 }],
-      ['pistol', { damage: 34, range: 120, interval: 130 }],
-    ]);
     const players = new Map();
     let nextId = 1;
 
@@ -18,9 +18,10 @@
     }
 
     function snapshot(player, now) {
-      const { id, name, pos, yaw, height, hp, kills, deaths, life } = player;
+      const { id, name, pos, yaw, pitch, ads, height, stride, weapon, hp, kills, deaths, life } = player;
       return {
-        id, name, pos, yaw, height, hp, kills, deaths, life,
+        id, name, pos, yaw, pitch, ads, height, stride, weapon, hp, kills, deaths, life,
+        speed: now - player.lastMove < 240 ? player.speed : 0,
         livesIn: Math.max(0, player.respawnAt - now),
         protected: now < player.protectedUntil,
       };
@@ -39,7 +40,10 @@
       }
       player.life++;
       player.yaw = Math.atan2(player.pos[0], player.pos[2]);
-      player.height = 1.8;
+      Object.assign(player, { pitch: 0, ads: false, height: heights.stand, speed: 0, stride: 0, weapon: 'rifle', reload: null, ammoSeq: 0 });
+      player.loadout = Object.fromEntries(weaponIds.map((id) => [id, {
+        ammo: weapons[id].magSize, reserve: weapons[id].reserve, readyAt: 0,
+      }]));
       player.hp = 100;
       player.respawnAt = 0;
       player.protectedUntil = now + spawnProtection;
@@ -51,6 +55,7 @@
 
     function eliminate(victim, attacker, now) {
       victim.hp = 0;
+      victim.reload = null;
       victim.deaths++;
       victim.respawnAt = now + respawnDelay;
       if (attacker) attacker.kills++;
@@ -62,8 +67,8 @@
     }
 
     function updatePosition(player, message, now) {
-      const { pos, yaw, height } = message;
-      if (!vector(pos) || !Number.isFinite(yaw) || !Number.isFinite(height)) return;
+      const { pos, yaw, pitch, stance } = message;
+      if (!vector(pos) || !Number.isFinite(yaw) || !Number.isFinite(pitch) || !Object.hasOwn(heights, stance)) return;
       const [x, y, z] = pos;
       const [minX, , minZ, maxX, maxY, maxZ] = terminal.bounds;
       if (x < minX || x > maxX || z < minZ || z > maxZ || y < -8 || y > maxY) return;
@@ -82,8 +87,42 @@
       player.climb -= climb;
       player.pos = pos;
       player.yaw = Math.atan2(Math.sin(yaw), Math.cos(yaw));
-      player.height = Math.max(.85, Math.min(1.8, height));
+      player.pitch = Math.max(-1.55, Math.min(1.55, pitch));
+      player.height = heights[stance];
+      player.ads = message.ads === true;
+      player.speed = .48 * player.speed + .52 * Math.min(9, travel / Math.max(.025, elapsed));
+      player.stride = (player.stride + travel) % (2 * Math.PI / 5.1);
       if (y < -1.55) eliminate(player, null, now);
+    }
+
+    function inventory(player) {
+      return weaponIds.map((id) => {
+        const { ammo, reserve } = player.loadout[id];
+        return [id, ammo, reserve];
+      });
+    }
+
+    function sendAmmo(player) {
+      player.channel.send({ type: 'ammo', life: player.life, seq: player.ammoSeq, inventory: inventory(player) });
+    }
+
+    function finishReload(player, now) {
+      if (!player.reload || now < player.reload.readyAt) return;
+      const id = player.reload.id;
+      const slot = player.loadout[id];
+      const loaded = Math.min(weapons[id].magSize - slot.ammo, slot.reserve);
+      slot.ammo += loaded;
+      slot.reserve -= loaded;
+      player.reload = null;
+      sendAmmo(player);
+    }
+
+    function startReload(player, now) {
+      const id = player.weapon;
+      const slot = player.loadout[id];
+      const rule = weapons[id];
+      if (player.reload || !slot.reserve || slot.ammo === rule.magSize) return;
+      player.reload = { id, readyAt: now + (slot.ammo ? rule.reload : rule.emptyReload) };
     }
 
     // Slab intersection with the same axis-aligned cover used by the terminal.
@@ -107,25 +146,26 @@
     }
 
     function fire(player, message, now) {
-      const weapon = weapons.get(message.weapon);
-      if (!weapon || now < player.protectedUntil || now - player.lastShot < weapon.interval) return;
-      if (!vector(message.direction) || !Number.isFinite(message.eye)) return;
+      const id = player.weapon;
+      const weapon = weapons[id];
+      const slot = player.loadout[id];
+      if (id !== message.weapon || !slot.ammo || player.reload || now < player.protectedUntil
+        || now < slot.readyAt || now - player.lastShot < weapon.interval || !vector(message.direction)) return;
       const length = Math.hypot(...message.direction);
       if (length < .99 || length > 1.01) return;
       const direction = message.direction.map((value) => value / length);
       const [x, y, z] = player.pos;
-      const origin = [x, y + Math.max(.65, Math.min(1.85, message.eye)), z];
+      const origin = [x, y + player.height - .14, z];
       player.lastShot = now;
+      slot.readyAt = now + weapon.interval;
+      slot.ammo--;
 
       let range = weapon.range;
       for (const box of terminal.boxes) range = Math.min(range, distanceToBox(origin, direction, box, range));
       let target;
       for (const opponent of players.values()) {
         if (opponent === player || opponent.hp <= 0) continue;
-        const [tx, ty, tz] = opponent.pos;
-        const radius = .37;
-        const box = [tx - radius, ty, tz - radius, tx + radius, ty + opponent.height, tz + radius];
-        const distance = distanceToBox(origin, direction, box, range);
+        const distance = posture.hitDistance(opponent, origin, direction, range);
         if (distance < range) {
           target = opponent;
           range = distance;
@@ -173,6 +213,11 @@
         if (!message || typeof message !== 'object') return;
         if (message.type === 'join' && !player) {
           clearTimeout(joinTimeout);
+          if (message.protocol !== protocol) {
+            channel.send({ type: 'error', message: 'Reload Saltline to join this arena with the latest game version.' });
+            terminate('Update required');
+            return;
+          }
           if (players.size >= capacity) {
             channel.send({ type: 'error', message: 'Arena full. Try again when a player leaves.' });
             terminate('Arena full');
@@ -183,12 +228,23 @@
           player = { channel, id, name: name || 'Player ' + id, kills: 0, deaths: 0, life: 0 };
           spawn(player, now);
           players.set(id, player);
-          channel.send({ type: 'welcome', id, capacity, player: snapshot(player, now) });
+          channel.send({ type: 'welcome', protocol, id, capacity, inventory: inventory(player), player: snapshot(player, now) });
           return;
         }
         if (!player || player.hp <= 0 || message.life !== player.life) return;
+        finishReload(player, now);
         if (message.type === 'move') updatePosition(player, message, now);
-        if (message.type === 'fire') fire(player, message, now);
+        if (message.type === 'equip' && weaponIds.includes(message.weapon)) {
+          if (message.weapon !== player.weapon) player.reload = null;
+          player.weapon = message.weapon;
+        }
+        if (message.type === 'reload' && message.weapon === player.weapon) startReload(player, now);
+        if (message.type === 'cancelReload') player.reload = null;
+        if (message.type === 'fire' && Number.isSafeInteger(message.seq) && message.seq > player.ammoSeq) {
+          player.ammoSeq = message.seq;
+          fire(player, message, now);
+          sendAmmo(player);
+        }
       }
 
       return { receive, close };
@@ -197,10 +253,16 @@
     function tick() {
       if (!players.size) return;
       const now = Date.now();
+      const respawned = [];
       for (const player of players.values()) {
-        if (player.respawnAt && now >= player.respawnAt) spawn(player, now);
+        if (player.respawnAt && now >= player.respawnAt) {
+          spawn(player, now);
+          respawned.push(player);
+        }
+        finishReload(player, now);
       }
       broadcast({ type: 'state', players: [...players.values()].map((player) => snapshot(player, now)) });
+      for (const player of respawned) sendAmmo(player);
     }
 
     return { attach, tick };
@@ -208,4 +270,7 @@
 
   if (typeof module === 'object') module.exports = createArena;
   else window.SaltlineArena = createArena;
-})();
+})(
+  typeof module === 'object' ? require('./weapon-rules.js') : window.SaltlineWeaponRules,
+  typeof module === 'object' ? require('./online-posture.js') : window.SaltlinePosture,
+);

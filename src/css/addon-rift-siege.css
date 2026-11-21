@@ -12,7 +12,7 @@
 .rs-active .h-relays,
 .rs-active .h-ammo:not(.rs-weapon),
 .rs-active .x-nade,
-.rs-active .touch :is(.t-ads, .t-reload, .t-laser, .t-knife, .t-nade),
+.rs-active .touch :is(.t-ads, .t-reload, .t-sniper, .t-knife, .t-nade),
 .rs-report-active > :is(.m-k, .m-h, .m-stats, .m-rating) { display: none; }
 
 .rs-active .h-obj {

@@ -9,7 +9,8 @@
     init(window.__G);
   }
 
-  function init({ THREE: T, player, weapon, game, input, scene, hud, events, fx, audio }) {
+  function init(G) {
+    const { THREE: T, player, weapon, game, input, scene, hud, events, fx, audio } = G;
     if (!game?.menus?.root || !player?.recallTo) return;
     const menu = game.menus.root;
     const rooms = window.SaltlineRooms;
@@ -25,7 +26,7 @@
     dialog.setAttribute('aria-labelledby', 'sl-online-title');
     dialog.innerHTML = `<form>
       <h2 id="sl-online-title">Online Free-for-All</h2>
-      <p>Fight up to 11 other players on Saltline Terminal with the rifle and pistol. Respawns are automatic.</p>
+      <p>Fight up to 11 other players on Saltline Terminal. Respawns are automatic.</p>
       <label for="sl-online-name">Display name</label>
       <input id="sl-online-name" name="name" maxlength="18" placeholder="Player" autocomplete="nickname">
       <p role="status"></p>
@@ -77,46 +78,20 @@
     const notice = display.querySelector('.sl-online-notice');
 
     let socket, joinTimer, me, id, capacity, nextMove, scoreKey, feedUntil;
+    let shotSequence = 0;
+    let pendingShots = [];
     const avatars = new Map();
+    const models = window.SaltlineAvatars(G);
     const names = new Map();
     const point = new T.Vector3();
-    const delta = new T.Vector3();
-    const bodyGeo = new T.BoxGeometry(.48, .55, .31);
-    const headGeo = new T.SphereGeometry(.17, 10, 8);
-    const limbGeo = new T.BoxGeometry(.16, .62, .17).translate(0, -.24, 0);
-    const packGeo = new T.BoxGeometry(.32, .37, .13);
-    const barrelGeo = new T.BoxGeometry(.10, .10, .57);
-    const visorGeo = new T.BoxGeometry(.24, .055, .08);
-    const uniform = new T.MeshStandardMaterial({ color: 0x3a4449, roughness: .88 });
-    const armor = new T.MeshStandardMaterial({ color: 0xc67e4c, roughness: .68, emissive: 0x382011 });
-    const visor = new T.MeshBasicMaterial({ color: 0xffc98d });
-    const protectedVisor = new T.MeshBasicMaterial({ color: 0x9cffe6 });
-
-    function buildAvatar() {
-      const group = new T.Group();
-      group.name = 'online-player';
-      function part(geo, material, x, y, z) {
-        const mesh = new T.Mesh(geo, material);
-        mesh.position.set(x, y, z);
-        group.add(mesh);
-        return mesh;
-      }
-      part(bodyGeo, armor, 0, 1.16, 0);
-      part(headGeo, uniform, 0, 1.61, 0);
-      const face = part(visorGeo, visor, 0, 1.63, -.146);
-      part(packGeo, uniform, 0, 1.19, .19);
-      const legs = [-.14, .14].map((x) => part(limbGeo, uniform, x, .78, 0));
-      part(limbGeo, uniform, -.29, 1.36, 0).rotation.x = .8;
-      part(limbGeo, uniform, .29, 1.36, 0).rotation.x = 1.05;
-      part(barrelGeo, uniform, .24, 1.23, -.37);
-      scene.add(group);
-      return { group, legs, face, target: new T.Vector3(), yaw: 0, stride: 0, life: -1 };
-    }
+    weapon.canFire = () => !socket || (!!me?.hp && !me.protected);
 
     function send(message) {
       if (socket?.readyState === WebSocket.OPEN && socket.bufferedAmount < 8192) {
         socket.send(JSON.stringify(message));
+        return true;
       }
+      return false;
     }
 
     function move(now) {
@@ -124,7 +99,8 @@
       nextMove = now + 66;
       send({
         type: 'move', life: me.life, pos: player.pos.toArray(), yaw: player.yaw,
-        height: player.sliding ? .88 : player.crouching ? 1.15 : 1.8,
+        pitch: player.pitch, ads: weapon.ads > .4,
+        stance: player.sliding ? 'slide' : player.crouching ? 'crouch' : 'stand',
       });
     }
 
@@ -134,12 +110,14 @@
     };
     const originalPressed = input.pressed.bind(input);
     input.pressed = function (action) {
-      if (socket && ['weapon3', 'grenade'].includes(action)) return false;
+      if (socket && action === 'grenade') return false;
       return originalPressed(action);
     };
 
     function updateLocal(state, from) {
       if (!me || state.life !== me.life) {
+        shotSequence = 0;
+        pendingShots = [];
         player.reset({ pos: point.fromArray(state.pos), yaw: state.yaw });
         weapon.reset();
         weapon.setVisible(true);
@@ -154,6 +132,16 @@
       me = state;
     }
 
+    function updateAmmo(life, sequence, inventory) {
+      if (me?.life !== life || !inventory) return;
+      pendingShots = pendingShots.filter(({ seq }) => seq > sequence);
+      for (const [id, ammo, reserve] of inventory) {
+        const slot = weapon.rigs[id].slot;
+        slot.ammo = Math.max(0, ammo - pendingShots.filter((shot) => shot.id === id).length);
+        slot.reserve = reserve;
+      }
+    }
+
     function renderState(list) {
       const present = new Set();
       for (const state of list) {
@@ -163,17 +151,15 @@
           continue;
         }
         present.add(state.id);
-        const avatar = avatars.get(state.id) || buildAvatar();
+        const avatar = avatars.get(state.id) || models.create();
         avatar.target.fromArray(state.pos);
-        avatar.yaw = state.yaw;
-        if (avatar.life !== state.life) {
+        if (avatar.state?.life !== state.life) {
           avatar.group.position.copy(avatar.target);
           avatar.group.rotation.y = state.yaw;
+          avatar.shotAt = -Infinity;
         }
-        avatar.life = state.life;
+        avatar.state = state;
         avatar.group.visible = state.hp > 0;
-        avatar.group.scale.y = state.height / 1.8;
-        avatar.face.material = state.protected ? protectedVisor : visor;
         avatars.set(state.id, avatar);
       }
       for (const [other, avatar] of avatars) {
@@ -214,11 +200,19 @@
     function receive(message) {
       switch (message.type) {
         case 'welcome':
+          if (message.protocol !== 2) {
+            leave('The arena is running an older game version. Try again after the room service updates.');
+            break;
+          }
           clearTimeout(joinTimer);
           id = message.id;
           capacity = message.capacity;
           inviteButton.hidden = !socket.invite;
           renderState([message.player]);
+          updateAmmo(message.player.life, 0, message.inventory);
+          break;
+        case 'ammo':
+          updateAmmo(message.life, message.seq, message.inventory);
           break;
         case 'state':
           renderState(message.players);
@@ -233,10 +227,18 @@
           if (message.id === id) {
             if (message.hit) hud.hitmarker(message.kill ? 'kill' : 'hit');
           } else {
+            const avatar = avatars.get(message.id);
             const origin = new T.Vector3().fromArray(message.origin);
+            if (avatar?.state) {
+              avatar.state.weapon = message.weapon;
+              avatar.shotAt = performance.now();
+              models.update(avatar, 0, avatar.shotAt);
+              avatar.muzzle.getWorldPosition(origin);
+            }
             const end = new T.Vector3().fromArray(message.end);
             fx.tracer?.(origin, end, { color: 0xffc27a, speed: 245, width: .026 });
-            audio.play?.(message.weapon + '_shot', { pos: origin, gain: .65 });
+            const sniper = message.weapon === 'sniper';
+            audio.play?.(sniper ? 'rifle_shot' : message.weapon + '_shot', { pos: origin, gain: sniper ? .85 : .65, pitch: sniper ? .72 : 1 });
           }
           break;
         case 'elimination': {
@@ -256,6 +258,7 @@
       if (!socket) return;
       const old = socket;
       socket = null;
+      weapon.authoritativeReload = false;
       clearTimeout(joinTimer);
       old.close();
       for (const { group } of avatars.values()) scene.remove(group);
@@ -282,7 +285,7 @@
       socket = connection;
       joinTimer = setTimeout(() => leave('Could not reach the arena. Try again.'), rooms ? 18000 : 6500);
       connection.addEventListener('open', () => {
-        if (socket === connection) send({ type: 'join', name: name.value });
+        if (socket === connection) send({ type: 'join', protocol: 2, name: name.value });
       });
       connection.addEventListener('message', (event) => {
         if (socket === connection) receive(JSON.parse(event.data));
@@ -294,6 +297,7 @@
       document.body.classList.add('sl-online-live');
       audio.resume?.();
       game.start({ mode, skipIntro: true });
+      weapon.authoritativeReload = true;
       player.enabled = false;
       weapon.setVisible(false);
       input.requestLock();
@@ -324,10 +328,20 @@
       if (state === 'title') leave();
       showMatch();
     });
-    events.on('weapon:fire', ({ dir, origin, weapon: fired }) => {
+    events.on('weapon:switch', ({ to, phase }) => {
+      if (me?.hp && phase === 'draw') send({ type: 'equip', life: me.life, weapon: to });
+    });
+    events.on('weapon:reload', ({ phase, weapon: id }) => {
+      if (!me?.hp) return;
+      if (phase === 'start') send({ type: 'reload', life: me.life, weapon: id });
+      if (phase === 'cancel') send({ type: 'cancelReload', life: me.life });
+    });
+    events.on('weapon:fire', ({ dir, weapon: fired }) => {
       if (!socket || !me?.hp || game.state !== 'playing') return;
       if (performance.now() >= nextMove) move(performance.now());
-      send({ type: 'fire', life: me.life, weapon: fired, direction: dir.toArray(), eye: origin.y - player.pos.y });
+      const seq = ++shotSequence;
+      if (send({ type: 'fire', life: me.life, seq, weapon: fired, direction: dir.toArray() })) pendingShots.push({ seq, id: fired });
+      else weapon.rigs[fired].slot.ammo++;
     });
 
     const update = game.update.bind(game);
@@ -341,17 +355,7 @@
         feed.textContent = '';
         feedUntil = 0;
       }
-      const blend = 1 - Math.exp(-18 * dt);
-      for (const { group, target, yaw, legs } of avatars.values()) {
-        if (!group.visible) continue;
-        delta.copy(target).sub(group.position);
-        group.position.lerp(target, blend);
-        const angle = yaw - group.rotation.y;
-        group.rotation.y += Math.atan2(Math.sin(angle), Math.cos(angle)) * blend;
-        const swing = Math.sin(now * .013) * Math.min(.6, Math.hypot(delta.x, delta.z) * 3);
-        legs[0].rotation.x = swing;
-        legs[1].rotation.x = -swing;
-      }
+      for (const avatar of avatars.values()) if (avatar.group.visible) models.update(avatar, dt, now);
       return result;
     };
   }

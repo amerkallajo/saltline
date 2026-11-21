@@ -124,7 +124,7 @@
     G.events && G.events.on && G.events.on('weapon:fire', function () { lastShot = clock; });
     G.events && G.events.on && G.events.on('player:grenade', function () { lastShot = clock; });
     // soldiers see you from far away only when your light is on or you are shooting
-    window.__slSight = function () { return (flOn || clock - lastShot < 2.5 || (window.__addon && window.__addon.laserOn && G.input.fire)) ? 80 : 26; };
+    window.__slSight = function () { return (flOn || clock - lastShot < 2.5) ? 80 : 26; };
 
     var origUpdate = P.update;
     P.update = function (dt) {

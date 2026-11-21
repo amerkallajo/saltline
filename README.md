@@ -2,7 +2,7 @@
 
 ## Play on GitHub Pages
 
-Open [Saltline](https://amerkallajo.github.io/saltline/), choose **Online Free-for-All**, and select **Host arena**. From the pause menu, choose **Copy invite link** and share it. Your friends open that link and choose **Join arena**. The host's browser runs the match, so keep it open while everyone plays.
+Open [Saltline](https://amerkallajo.github.io/saltline/), choose **Online Free-for-All**, and select **Host arena**. From the pause menu, choose **Copy invite link** and share it. Your friends open that link and choose **Join arena**. Keep the host's tab open while everyone plays.
 
 The published build can use a hosted WebSocket service so players on different networks can join without opening a direct browser-to-browser connection. Create a fresh invite after switching to hosted rooms.
 
@@ -12,7 +12,7 @@ Deploy the room service with Wrangler using [wrangler.jsonc](wrangler.jsonc). Se
 
 ## Play on a dedicated server
 
-Choose **Online Free-for-All**, enter a display name, and choose **Join arena**. Everyone on the same server joins one 12-player match on Saltline Terminal. The rifle and pistol are available, scores last for the current connection, and players respawn automatically.
+Choose **Online Free-for-All**, enter a display name, and choose **Join arena**. Everyone on the same server joins one 12-player match on Saltline Terminal. Use **1** for the rifle, **2** for the pistol and **3** for the Breakwater sniper rifle. Press **R** to reload. Scores last for the current connection, and players respawn with a fresh loadout.
 
 ## Run the server
 
@@ -30,6 +30,6 @@ The offline modes still work when opening `index.html` or `dist/saltline.html` d
 
 ## Multiplayer integration
 
-The dedicated server and the GitHub Pages room host use the same damage, cover, scoring, and respawn rules. Each browser simulates local movement and sends positions, which the match checks against arena bounds and movement limits.
+The hosted worker, dedicated Node server and browser-hosted rooms share damage, cover, posture, ammo, reload, scoring and respawn rules. Each browser simulates local movement and sends positions, which the match checks against arena bounds and movement limits.
 
 `server/terminal.json` mirrors the base game's terminal collision boxes and walkable ground spawns. If the terminal geometry changes, refresh its boxes from `window.__G.physics.boxes` (excluding `playerOnly` boxes), its bounds from `window.__G.physics.bounds`, and its spawn positions from `window.__G.level`. Coordinates use XYZ order. Each box contains its minimum XYZ followed by its maximum XYZ.
