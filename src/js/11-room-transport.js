@@ -36,10 +36,13 @@
       transport.readyState = 3;
       clearInterval(timer);
       clearTimeout(reconnect);
+      window.removeEventListener('pagehide', closeTab);
       local?.close();
       peer.destroy();
       transport.dispatchEvent(new CloseEvent('close', { reason }));
     };
+    const closeTab = () => transport.close();
+    window.addEventListener('pagehide', closeTab);
 
     transport.send = (data) => {
       if (transport.readyState !== 1) return;
