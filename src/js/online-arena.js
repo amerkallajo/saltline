@@ -48,7 +48,7 @@
       player.respawnAt = 0;
       player.protectedUntil = now + spawnProtection;
       player.lastMove = now;
-      player.lastShot = now;
+      player.readyAt = now;
       player.travel = 1.35;
       player.climb = 1.1;
     }
@@ -150,13 +150,13 @@
       const weapon = weapons[id];
       const slot = player.loadout[id];
       if (id !== message.weapon || !slot.ammo || player.reload || now < player.protectedUntil
-        || now < slot.readyAt || now - player.lastShot < weapon.interval || !vector(message.direction)) return;
+        || now < slot.readyAt || now < player.readyAt || !vector(message.direction)) return;
       const length = Math.hypot(...message.direction);
       if (length < .99 || length > 1.01) return;
       const direction = message.direction.map((value) => value / length);
       const [x, y, z] = player.pos;
       const origin = [x, y + player.height - .14, z];
-      player.lastShot = now;
+      player.readyAt = now + Math.min(weapon.interval, 130);
       slot.readyAt = now + weapon.interval;
       slot.ammo--;
 
