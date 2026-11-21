@@ -1,0 +1,12 @@
+
+.m-note { display: none !important; }
+@media (max-height: 820px) and (min-width: 761px) { .m-word { font-size: clamp(52px, 12.5vh, 150px) !important; margin-top: 6px !important; margin-bottom: 10px !important; } .m-pick { margin-top: 10px !important; } }
+.x-time .seg button { min-height: 34px; font-size: 12px; background: rgba(11, 13, 15, .45); }
+.x-time .seg button[aria-pressed="true"] { background: var(--bone); }
+.x-fl { position: absolute; left: var(--gl); bottom: calc(244px + var(--sab)); font: 600 11px/1 var(--f-label); letter-spacing: .22em; text-transform: uppercase; color: var(--bone-dim); text-shadow: var(--shadow); display: none; }
+.x-fl.on { display: block; }
+.x-fl b { color: #ffe9b8; font-weight: 600; }
+.is-touch .x-fl { display: none !important; }
+@media (max-height: 520px) { .x-fl { bottom: calc(190px + var(--sab)); } }
+.t-flashlight { width: 44px; height: 44px; border-radius: 0; top: calc(12px + var(--sat)); right: calc(116px + var(--sar)); font-size: 10px; }
+@media (max-width: 760px) { .t-flashlight { right: auto; left: calc(12px + var(--sal)); } }

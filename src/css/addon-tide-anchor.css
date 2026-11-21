@@ -1,0 +1,18 @@
+.ta-control {
+  position:absolute;bottom:calc(18px + var(--sab));left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:9px;padding:6px 11px 8px;pointer-events:none;
+  color:#d0e9da;background:rgba(12,28,29,.81);border:1px solid #738f838c;
+  text-align:left;text-transform:uppercase;min-height:39px;
+}
+.ta-control[hidden]{display:none}
+.ta-glyph{color:#a1efd0;font:25px/.9 Georgia,serif}
+.ta-detail{display:grid;gap:1px}
+.ta-detail small{font:500 8px/1.1 var(--f-mono);letter-spacing:.13em;color:#b3c9ba}
+.ta-detail strong{font:600 12px/1.1 var(--f-label);letter-spacing:.08em}
+.ta-control kbd{font:500 10px var(--f-mono);border:1px solid #82a192;padding:1px 3px}
+.ta-control kbd:empty{display:none}
+.ta-control i{position:absolute;height:2px;bottom:-1px;left:0;right:0;background:#9af0c8;transform-origin:left}
+.ta-control[data-state="armed"]{background:#143b32e8;border-color:#a8f0c9;color:#d9ffe5}
+.ta-control[data-state="charging"]{color:#c0cac7}
+.is-touch .ta-control{pointer-events:auto;touch-action:none;min-height:44px;bottom:max(6px,var(--sab))}
+@media(max-width:600px){.is-touch .ta-control{gap:4px;padding:3px 6px;left:42%}.ta-control .ta-glyph{font-size:17px}.ta-detail strong{font-size:10px}}

@@ -1,0 +1,93 @@
+/* Dock Dash uses the standard menu, objective tracker, and compass. */
+.menu[data-mode="dock-dash"] .m-title [id="l-td"],
+.menu[data-mode="dock-dash"] .m-title [aria-labelledby="l-td"],
+.menu[data-mode="dock-dash"] .m-note,
+.menu:not([data-mode="dock-dash"]) .dash-menu-best,
+.dash-menu-best[hidden],
+.dash-clock[hidden],
+.dash-split[hidden],
+.dash-result[hidden] { display: none; }
+
+.dash-menu-best {
+  grid-column: 1 / -1;
+  color: #93fbea;
+  font: 500 11px/1.4 var(--f-mono);
+}
+
+.m-pick .seg[aria-labelledby="l-tm"] {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.m-pick .seg[aria-labelledby="l-tm"] button { padding-inline: 4px; }
+
+.h-obj.dash-active {
+  border-color: #66f7e6;
+  padding: 4px 12px 8px;
+  background: linear-gradient(90deg, rgba(11, 13, 15, .91), rgba(11, 13, 15, .62));
+}
+.dash-active .h-obj-t {
+  margin: 2px 0 5px;
+  min-height: 0;
+  color: #a8fff0;
+}
+.dash-active .h-relays { display: none; }
+.dash-running :is(.h-ammo, .h-cross, .h-health, .x-nade),
+.dash-running .touch :is(.t-fire, .t-ads, .t-reload, .t-swap, .t-nade, .t-laser, .t-knife) {
+  display: none;
+}
+.dash-running .touch .t-jump { bottom: calc(85px + var(--sab)); }
+.dash-running .touch .t-crouch { right: calc(102px + var(--sar)); bottom: calc(35px + var(--sab)); }
+.dash-clock {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  color: var(--bone);
+  font: 500 12px/1.4 var(--f-mono);
+  font-variant-numeric: tabular-nums;
+}
+.dash-clock .dash-time { font-size: 21px; }
+.dash-split.ahead, .dash-splits .ahead { color: #93fbea; }
+.dash-split.behind, .dash-splits .behind { color: #ffc897; }
+.h-cm.dash, .h-wm.dash { color: #93fbea; }
+
+.m-debrief:has(.dash-result:not([hidden])) > .m-k,
+.m-debrief:has(.dash-result:not([hidden])) > .m-h,
+.m-debrief:has(.dash-result:not([hidden])) > .m-rating,
+.m-debrief:has(.dash-result:not([hidden])) > .m-stats { display: none; }
+.m-debrief .dash-result .m-h { white-space: normal; }
+.dash-result .dash-finish { color: #93fbea; font-variant-numeric: tabular-nums; }
+.dash-record { color: var(--bone); font: 500 12px/1.4 var(--f-mono); }
+.dash-split-list { margin-top: 12px; }
+.dash-split-list:focus-visible { outline: 2px solid #93fbea; outline-offset: 3px; }
+.dash-splits {
+  width: 100%;
+  border-collapse: collapse;
+  font: 500 12px/1.35 var(--f-mono);
+  font-variant-numeric: tabular-nums;
+}
+.dash-splits :is(th, td) { padding: 5px 0 5px 8px; text-align: right; }
+.dash-splits th:first-child { padding-left: 0; text-align: left; }
+.dash-splits thead { color: var(--steel); }
+.dash-splits tbody tr { border-top: 1px solid var(--line); }
+.dash-splits td { white-space: nowrap; }
+
+@media (max-width: 360px) {
+  .m-pick .seg[aria-labelledby="l-tm"] button { font-size: 11px; letter-spacing: .02em; }
+}
+@media (max-height: 480px) {
+  .m-debrief:has(.dash-result:not([hidden])) { padding-block: 12px; }
+  .m-debrief .dash-result .m-h {
+    font-size: clamp(24px, 7.5vh, 34px) !important;
+    margin: 6px 0 8px !important;
+  }
+  .dash-result .m-rating { margin: 0 0 6px; }
+  .dash-result .dash-finish { font-size: 34px; }
+  .dash-split-list {
+    max-height: clamp(52px, calc(100dvh - 260px), 107px);
+    margin-top: 8px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  .m-debrief:has(.dash-result:not([hidden])) .m-actions .btn { min-height: 36px; }
+}

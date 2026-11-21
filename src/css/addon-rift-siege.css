@@ -1,0 +1,91 @@
+/* Rift Siege uses the normal menu, crosshair, and movement controls. */
+.m-pick .seg[aria-labelledby="l-tm"] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.menu[data-mode="rift-siege"] .m-premise,
+.menu[data-mode="rift-siege"] .m-note,
+.rs-status,
+.h-ammo.rs-weapon,
+.rs-report { display: none; }
+
+.rs-active .rs-status,
+.rs-active .h-ammo.rs-weapon,
+.rs-report-active > .rs-report { display: block; }
+.rs-active .h-relays,
+.rs-active .h-ammo:not(.rs-weapon),
+.rs-active .x-nade,
+.rs-active .touch :is(.t-ads, .t-reload, .t-laser, .t-knife, .t-nade),
+.rs-report-active > :is(.m-k, .m-h, .m-stats, .m-rating) { display: none; }
+
+.rs-active .h-obj {
+  padding: 6px 12px 9px;
+  border-color: #78f8e7;
+  background: linear-gradient(90deg, rgba(11, 13, 15, .91), rgba(11, 13, 15, .62));
+}
+.rs-active .h-obj.rs-critical { border-color: #ff8268; }
+.rs-active .h-obj-t { color: #bafff5; margin-bottom: 5px; }
+.rs-status { color: var(--bone); font: 500 11px/1.35 var(--f-mono); }
+.rs-wave { margin-bottom: 6px !important; }
+.rs-core {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 3px 12px;
+  color: #b4fdef;
+}
+.rs-critical .rs-core { color: #ffa98f; }
+.rs-core progress {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 5px;
+  color: currentColor;
+  accent-color: currentColor;
+}
+.rs-core progress::-webkit-progress-bar { background: #3a494a; }
+.rs-core progress::-webkit-progress-value { background: currentColor; }
+.h-cm.siege, .h-wm.siege { color: #94ffed; }
+
+.rs-weapon {
+  --rs-energy: #a7ffec;
+  padding: 9px 12px;
+  background: rgba(11, 13, 15, .75);
+  border-right: 2px solid var(--rs-energy);
+}
+.rs-weapon[data-weapon="1"] { --rs-energy: #f1b8ff; }
+.rs-charge {
+  color: var(--rs-energy);
+  font: 700 27px/.95 var(--f-display);
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+.rs-weapon .h-wname { margin: 5px 0 3px; }
+.rs-tip, .rs-keys { font: 500 10px/1.35 var(--f-mono); color: var(--bone); }
+.rs-keys { margin-top: 6px; }
+.rs-report .m-h { white-space: normal; }
+
+.is-touch .rs-active .h-health { top: calc(174px + var(--sat)); }
+.is-touch .rs-active .rs-keys { display: none; }
+.rs-active .touch .t-swap {
+  width: 44px;
+  height: 42px;
+  right: calc(65px + var(--sar));
+  top: calc(12px + var(--sat));
+  bottom: auto;
+  border-radius: 0;
+  border-color: #bafded;
+}
+.rs-active .touch .t-crouch { right: calc(119px + var(--sar)); bottom: calc(35px + var(--sab)); }
+
+@media (max-width: 420px) {
+  .m-pick .seg[aria-labelledby="l-tm"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .m-pick .seg[aria-labelledby="l-tm"] button { letter-spacing: .04em; }
+  .rs-active .h-obj { max-width: 48vw; padding-inline: 6px; }
+  .rs-weapon { max-width: 39vw; padding-inline: 6px; }
+}
+@media (max-height: 420px) {
+  .is-touch .rs-active .rs-tip { display: none; }
+  .rs-active .touch .t-jump {
+    right: calc(119px + var(--sar));
+    bottom: calc(112px + var(--sab));
+  }
+  .rs-report-active { padding-block: 13px; }
+  .rs-report .m-h { font-size: 34px !important; }
+  .rs-report-active .m-actions .btn { min-height: 36px; }
+}

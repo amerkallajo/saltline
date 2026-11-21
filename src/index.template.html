@@ -1,0 +1,50 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>{{file:src/css/00-host.css}}</style></head><body>
+<title>Saltline (Copy)</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;900&family=IBM+Plex+Mono:wght@400;500&family=Barlow+Condensed:wght@400;500;600&display=swap">
+<style>{{file:src/css/ui.css}}</style>
+<div id="app">
+  <canvas id="view" tabindex="0"></canvas>
+  <div id="ui"></div>
+  <div id="boot">
+    <div class="boot-mark">SALTLINE</div>
+    <div class="boot-sub" id="boot-msg">Raising the terminal</div>
+    <div class="boot-bar"><i id="boot-fill"></i></div>
+  </div>
+</div>
+<script type="application/octet-stream" id="legacy-v8">{{file:src/legacy/legacy-v8.b64}}</script>
+<script>{{file:src/js/01-time-of-day.js}}</script>
+<script>{{file:src/js/02-engine.bundle.js}}</script>
+<style>{{file:src/css/addon-laser.css}}</style>
+<script>{{file:src/js/03-addon-laser-grenades.js}}</script>
+
+<style>{{file:src/css/addon-firefight.css}}</style>
+<script>{{file:src/js/04-addon-firefight.js}}</script>
+
+<style>{{file:src/css/addon-menu-tweaks.css}}</style>
+<script>{{file:src/js/05-addon-night.js}}</script>
+
+<style>{{file:src/css/addon-dock-dash.css}}</style>
+<script>{{file:src/js/06-addon-dock-dash.js}}</script>
+
+<style>{{file:src/css/addon-rift-siege.css}}</style>
+<script>{{file:src/js/07-addon-rift-siege.js}}</script>
+
+<style>{{file:src/css/addon-soundings.css}}</style>
+<style>{{file:src/css/soundings-art.css}}</style>
+<script>{{file:src/js/08-addon-soundings.js}}</script>
+
+<style>{{file:src/css/addon-tide-anchor.css}}</style>
+<script>{{file:src/js/09-addon-tide-anchor.js}}</script>
+
+<style>{{file:src/css/addon-online.css}}</style>
+<!-- pages-only -->
+<script>{{file:node_modules/peerjs/dist/peerjs.min.js}}</script>
+<script type="application/json" id="sl-online-terminal">{{file:server/terminal.json}}</script>
+<script>{{file:src/js/online-arena.js}}</script>
+<script>{{file:src/js/11-room-transport.js}}</script>
+<!-- /pages-only -->
+<script>{{file:src/js/10-addon-online.js}}</script>
+
+</body></html>

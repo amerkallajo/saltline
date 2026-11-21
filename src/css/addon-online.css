@@ -1,0 +1,84 @@
+.sl-online-dialog {
+  width: min(400px, calc(100vw - 36px));
+  max-height: calc(100dvh - 28px);
+  padding: 24px;
+  color: #f0f7f6;
+  background: #0d1b20;
+  border: 1px solid #577979;
+  box-shadow: 0 16px 60px #000a;
+  font: 15px "IBM Plex Mono", monospace;
+}
+.sl-online-dialog::backdrop { background: #040b0de0; }
+.sl-online-dialog h2 {
+  margin: 0;
+  color: #afffe3;
+  font: 900 38px/1 "Big Shoulders Display", sans-serif;
+  text-transform: uppercase;
+}
+.sl-online-dialog p { margin: 12px 0; line-height: 1.45; }
+.sl-online-dialog label { display: block; margin: 18px 0 6px; }
+.sl-online-dialog input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  color: inherit;
+  background: #162a31;
+  border: 1px solid #769995;
+  font: inherit;
+}
+.sl-online-dialog .m-actions { display: flex; gap: 8px; margin-top: 16px; }
+.sl-online-dialog [role="status"]:empty { display: none; }
+.sl-online-dialog :focus-visible, .sl-online-hud button:focus-visible {
+  outline: 2px solid #b8ffe6;
+  outline-offset: 3px;
+}
+.sl-online-button {
+  display: block;
+  margin-top: 8px;
+  border-color: #71d4b6 !important;
+  color: #b5ffe8 !important;
+}
+.sl-online-invite[hidden] { display: none; }
+.sl-online-hud {
+  position: absolute;
+  top: 78px;
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 5;
+  color: #f0f7f6;
+  width: min(240px, 42vw);
+  font: 12px/1.55 "IBM Plex Mono", monospace;
+  pointer-events: none;
+}
+.sl-online-hud[hidden], .sl-online-hud [hidden] { display: none; }
+.sl-online-score {
+  padding: 6px 8px;
+  background: #0b171be8;
+  border-left: 2px solid #85e5c6;
+}
+.sl-online-header { display: flex; justify-content: space-between; gap: 6px; color: #b5ffe8; }
+.sl-online-hud ol { margin: 4px 0 0; padding: 0; list-style: none; }
+.sl-online-hud li { display: flex; justify-content: space-between; gap: 6px; }
+.sl-online-hud li span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sl-online-hud li[data-local] { color: #b5ffe8; font-weight: 700; }
+.sl-online-notice {
+  position: fixed;
+  bottom: 28%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 85vw;
+  padding: 6px 12px;
+  background: #0b171bed;
+  border: 1px solid #577979;
+  color: #f0f7f6;
+  text-align: center;
+}
+.sl-online-feed { margin: 5px 0 0; color: #fff0cf; text-align: right; text-shadow: 0 1px 3px #000, 0 1px 4px #000; }
+body.sl-online-live .h-obj,
+body.sl-online-live .x-nade,
+body.sl-online-live .t-nade,
+body.sl-online-live .t-laser,
+body.sl-online-live [data-act="restart"] { display: none !important; }
+@media (max-height: 460px), (max-width: 540px) {
+  .sl-online-hud { font-size: 10px; top: 52px; }
+}
