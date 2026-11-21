@@ -4,8 +4,27 @@
   const terminal = JSON.parse(document.getElementById('sl-online-terminal').textContent);
   const roomKey = /^[0-9a-f]{32}$/;
   const peerId = (key) => 'saltline-v1-' + key;
+  const server = document.querySelector('meta[name="saltline-room-server"]')?.content;
+  const url = new URL(location.href);
+  const key = url.searchParams.get('room');
+  const room = roomKey.test(key || '') ? key : null;
+  const hosted = server && (!room || url.searchParams.get('via') === 'server');
 
-  function create(room) {
+  function createServerConnection(room) {
+    const id = room || crypto.randomUUID().replaceAll('-', '');
+    const endpoint = new URL('/online/' + id, server);
+    endpoint.protocol = 'wss:';
+    if (!room) endpoint.searchParams.set('host', '1');
+    const socket = new WebSocket(endpoint);
+    if (!room) {
+      socket.invite = new URL(location.href);
+      socket.invite.searchParams.set('room', id);
+      socket.invite.searchParams.set('via', 'server');
+    }
+    return socket;
+  }
+
+  function createPeerConnection(room) {
     const host = !room;
     const key = room || crypto.randomUUID().replaceAll('-', '');
     const Peer = window.peerjs.Peer;
@@ -127,7 +146,5 @@
     return transport;
   }
 
-  const url = new URL(location.href);
-  const room = url.searchParams.get('room');
-  window.SaltlineRooms = { create, room: roomKey.test(room || '') ? room : null };
+  window.SaltlineRooms = { create: hosted ? createServerConnection : createPeerConnection, room };
 })();

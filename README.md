@@ -4,7 +4,11 @@
 
 Open [Saltline](https://amerkallajo.github.io/saltline/), choose **Online Free-for-All**, and select **Host arena**. From the pause menu, choose **Copy invite link** and share it. Your friends open that link and choose **Join arena**. The host's browser runs the match, so keep it open while everyone plays.
 
-GitHub Pages serves the standalone browser build. It uses PeerJS Cloud to introduce browsers and WebRTC data channels for play. Some restrictive networks may block direct peer connections.
+The published build can use a hosted WebSocket service so players on different networks can join without opening a direct browser-to-browser connection. Create a fresh invite after switching to hosted rooms.
+
+## Publish hosted rooms
+
+Deploy the room service with Wrangler using [wrangler.jsonc](wrangler.jsonc). Set the GitHub Actions repository variable `SALTLINE_ROOM_SERVER` to the service's HTTPS origin, then run **Publish Saltline**. The worker accepts game connections from the origin set by `SALTLINE_GAME_ORIGIN`. Without the repository variable, Pages uses PeerJS and direct WebRTC, which can fail on restrictive networks.
 
 ## Play on a dedicated server
 

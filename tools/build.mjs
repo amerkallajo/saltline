@@ -1,5 +1,6 @@
 // Build Saltline. No dependencies. Usage:
-//   node tools/build.mjs        -> dist/saltline.html (single file, what gets published) + index.html (dev, loads src/ files)
+//   node tools/build.mjs         -> dist/saltline.html and index.html
+//   node tools/build.mjs --pages -> also build dist/pages/index.html
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -30,7 +31,16 @@ console.log('built dist/saltline.html (' + single.length + ' bytes) and index.ht
 
 if (process.argv.includes('--pages')) {
   const pages = path.join(root, 'dist/pages');
+  let pagesTemplate = tpl;
+  if (process.env.SALTLINE_ROOM_SERVER) {
+    const endpoint = new URL(process.env.SALTLINE_ROOM_SERVER);
+    if (endpoint.protocol !== 'https:' || endpoint.username || endpoint.password) {
+      throw new Error('SALTLINE_ROOM_SERVER must be an HTTPS origin');
+    }
+    pagesTemplate = tpl.replace('<!-- saltline-room-server -->',
+      `<meta name="saltline-room-server" content="${endpoint.origin}">`);
+  }
   fs.mkdirSync(pages, { recursive: true });
-  fs.writeFileSync(path.join(pages, 'index.html'), inline(tpl));
+  fs.writeFileSync(path.join(pages, 'index.html'), inline(pagesTemplate));
   console.log('built dist/pages/index.html');
 }
